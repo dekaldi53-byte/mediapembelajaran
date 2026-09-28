@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Poligon E-F-G-H dengan Tombol Hasil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .canvas-grid {
+            background-image: linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-indigo-800/40 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-indigo-600 to-purple-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center">
+                    <i class="fa-solid fa-shapes text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">Kalkulator Poligon E-F-G-H</h1>
+                    <p class="text-xs text-slate-400">Geser titik pada kanvas dan tekan tombol hasil untuk menganalisis</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2.5">
+                <button onclick="setContohDefault()" class="px-3.5 py-2 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-indindigoigo-300 rounded-lg border border-indigo-700/50 transition-all flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Contoh Standar
+                </button>
+                <button onclick="resetKanvas()" class="px-3.5 py-2 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-rose-300 rounded-lg border border-rose-700/50 transition-all flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-rotate-right"></i> Reset
+                </button>
+                <button onclick="toggleGeoGebraModal(true)" class="px-3.5 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-globe"></i> GeoGebra
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- KOLOM KIRI: Kanvas & Tombol Aksi -->
+        <div class="lg:col-span-7 space-y-5 flex flex-col">
+            
+            <!-- Kanvas Koordinat -->
+            <div class="bg-slate-900/95 backdrop-blur-xl border border-indigo-800/40 rounded-2xl p-4 shadow-2xl flex flex-col relative overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+                        <h2 class="text-sm font-semibold text-indigo-200">Kanvas Koordinat Kartesius</h2>
+                    </div>
+                    <span class="text-[11px] text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-indigo-900/40">
+                        <i class="fa-solid fa-hand-pointer mr-1 text-indigo-400"></i> Seret Titik E, F, G, H
+                    </span>
+                </div>
+
+                <div class="relative w-full h-[380px] bg-slate-950 rounded-xl border border-indigo-900/60 canvas-grid overflow-hidden shadow-inner cursor-crosshair">
+                    <canvas id="polygonCanvas" class="w-full h-full block touch-none"></canvas>
+                    
+                    <div id="canvas-status-badge" class="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur border border-indigo-800/60 rounded-lg px-3 py-1.5 text-[11px] text-indigo-200 font-mono shadow-lg pointer-events-none">
+                        E(0,0) | F(0,0) | G(0,0) | H(0,0)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Tombol Hitung & Input Teks -->
+            <div class="bg-slate-900/95 backdrop-blur-xl border border-indigo-800/40 rounded-2xl p-5 shadow-2xl space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <!-- E Input -->
+                    <div class="bg-slate-950/80 p-2.5 rounded-xl border border-blue-900/40">
+                        <span class="font-bold text-blue-400 block mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Titik E</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <input type="number" id="in-ex" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                            <input type="number" id="in-ey" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                        </div>
+                    </div>
+                    <!-- F Input -->
+                    <div class="bg-slate-950/80 p-2.5 rounded-xl border border-emerald-900/40">
+                        <span class="font-bold text-emerald-400 block mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Titik F</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <input type="number" id="in-fx" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                            <input type="number" id="in-fy" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                        </div>
+                    </div>
+                    <!-- G Input -->
+                    <div class="bg-slate-950/80 p-2.5 rounded-xl border border-amber-900/40">
+                        <span class="font-bold text-amber-400 block mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Titik G</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <input type="number" id="in-gx" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                            <input type="number" id="in-gy" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                        </div>
+                    </div>
+                    <!-- H Input -->
+                    <div class="bg-slate-950/80 p-2.5 rounded-xl border border-rose-900/40">
+                        <span class="font-bold text-rose-400 block mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Titik H</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <input type="number" id="in-hx" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                            <input type="number" id="in-hy" step="0.5" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-100 text-center" oninput="syncInputsToCanvas()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Hitung Hasil Utama -->
+                <button onclick="hitungHasil()" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 group text-sm cursor-pointer">
+                    <i class="fa-solid fa-calculator group-hover:scale-110 transition-transform text-base"></i> Hitung Hasil (Luas & Keliling)
+                </button>
+            </div>
+
+        </div>
+
+        <!-- KOLOM KANAN: Hasil Perhitungan & Langkah-Langkah -->
+        <div class="lg:col-span-5 space-y-5 flex flex-col">
+            
+            <!-- Kotak Hasil Luas & Keliling -->
+            <div class="bg-slate-900/95 backdrop-blur-xl border border-indigo-800/40 rounded-2xl p-5 shadow-2xl">
+                <h2 class="text-sm font-semibold text-indigo-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-square-poll-vertical text-indigo-400"></i> Hasil Analisis Geometri
+                </h2>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-indigo-950 to-slate-900 p-4 rounded-xl border border-indigo-700/40 text-center shadow-inner">
+                        <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-medium block mb-1">Luas Poligon</span>
+                        <div class="text-3xl font-extrabold text-indigo-100" id="res-luas">--</div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Satuan Persegi</span>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-purple-950 to-slate-900 p-4 rounded-xl border border-purple-700/40 text-center shadow-inner">
+                        <span class="text-[11px] uppercase tracking-wider text-purple-300 font-medium block mb-1">Keliling Poligon</span>
+                        <div class="text-3xl font-extrabold text-purple-100" id="res-keliling">--</div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Satuan Panjang</span>
+                    </div>
+                </div>
+
+                <div id="warning-box" class="mt-4 hidden p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+                    <span id="warning-text">Poligon berpotongan sendiri atau kolinear.</span>
+                </div>
+            </div>
+
+            <!-- Detail Langkah Matematis -->
+            <div class="bg-slate-900/95 backdrop-blur-xl border border-indigo-800/40 rounded-2xl p-5 shadow-2xl flex-grow space-y-4">
+                <h2 class="text-sm font-semibold text-indigo-200 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open-reader text-indigo-400"></i> Penjelasan Langkah Perhitungan
+                </h2>
+
+                <div id="placeholder-info" class="text-xs text-slate-400 italic py-6 text-center bg-slate-950/50 rounded-xl border border-dashed border-indigo-900/40">
+                    Silakan atur titik koordinat lalu tekan tombol <strong class="text-indigo-300 font-semibold">"Hitung Hasil"</strong> untuk memunculkan rincian rumus dan langkah matematis.
+                </div>
+
+                <div id="result-details-container" class="space-y-4 hidden">
+                    <!-- Keliling section -->
+                    <div class="border-l-2 border-indigo-500 pl-3.5 py-1">
+                        <h3 class="font-semibold text-indigo-200 text-xs uppercase tracking-wide mb-1">1. Keliling (Teorema Jarak Euclidean)</h3>
+                        <p class="text-[11px] text-slate-400 mb-1.5">d = √((x₂ - x₁)² + (y₂ - y₁)²)</p>
+                        <div id="steps-perimeter" class="space-y-1 text-xs font-mono text-slate-300"></div>
+                    </div>
+
+                    <!-- Luas section -->
+                    <div class="border-l-2 border-purple-500 pl-3.5 py-1">
+                        <h3 class="font-semibold text-purple-200 text-xs uppercase tracking-wide mb-1">2. Luas (Shoelace Formula)</h3>
+                        <p class="text-[11px] text-slate-400 mb-1.5">Luas = 0.5 × |∑(x<sub>i</sub>y<sub>i+1</sub> - y<sub>i</sub>x<sub>i+1</sub>)|</p>
+                        <div id="steps-shoelace" class="space-y-1 text-xs font-mono text-slate-300 max-h-44 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal GeoGebra -->
+    <div id="geogebra-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-indigo-800/60 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-indigo-800/50 flex justify-between items-center bg-slate-950">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-globe text-indigo-400"></i>
+                    <h3 class="text-sm font-semibold text-indigo-200">GeoGebra Classic Integration</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="https://www.geogebra.org/classic/szrgdnyx" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-300 hover:text-indigo-200 underline flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Fullscreen
+                    </a>
+                    <button onclick="toggleGeoGebraModal(false)" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-1.5 rounded-lg transition-colors">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow relative bg-slate-950">
+                <iframe src="https://www.geogebra.org/classic/szrgdnyx" class="w-full h-full border-0" title="GeoGebra Classic"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-indigo-900/40 bg-slate-950/80 py-3 text-center text-xs text-slate-500 mt-auto">
+        <p>Kalkulator Interaktif Titik E, F, G, H &bull; Dikembangkan dengan HTML5 Canvas & Tailwind CSS</p>
+    </footer>
+
+    <script>
+        // State Koordinat Titik E, F, G, H
+        let points = {
+            E: { x: -3, y: 3, color: '#3b82f6', label: 'E' },
+            F: { x: 3, y: 3, color: '#10b981', label: 'F' },
+            G: { x: 4, y: -2, color: '#f59e0b', label: 'G' },
+            H: { x: -4, y: -2, color: '#f43f5e', label: 'H' }
+        };
+
+        let canvas, ctx;
+        let draggingPoint = null;
+        let scale = 28; // piksel per unit koordinat
+        let originX = 0;
+        let originY = 0;
+
+        window.onload = function() {
+            canvas = document.getElementById('polygonCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                drawCanvas();
+            });
+
+            setupCanvasListeners();
+            syncStateToInputs();
+            drawCanvas();
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            originX = rect.width / 2;
+            originY = rect.height / 2;
+        }
+
+        function toPixel(x, y) {
+            return {
+                px: originX + x * scale,
+                py: originY - y * scale
+            };
+        }
+
+        function toCartesian(px, py) {
+            const x = (px - originX) / scale;
+            const y = (originY - py) / scale;
+            // Bulatkan ke 0.5 terdekat atau 1 desimal agar mudah digeser
+            return { x: Math.round(x * 2) / 2, y: Math.round(y * 2) / 2 };
+        }
+
+        function drawCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Sumbu X dan Y
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(rect.width, originY);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, rect.height);
+            ctx.stroke();
+
+            // Grid angka
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px Inter';
+            for (let x = -10; x <= 10; x++) {
+                if (x === 0) continue;
+                let pos = toPixel(x, 0);
+                if (pos.px > 0 && pos.px < rect.width) {
+                    ctx.fillRect(pos.px, originY - 3, 1, 6);
+                    ctx.fillText(x, pos.px - 6, originY + 14);
+                }
+            }
+            for (let y = -10; y <= 10; y++) {
+                if (y === 0) continue;
+                let pos = toPixel(0, y);
+                if (pos.py > 0 && pos.py < rect.height) {
+                    ctx.fillRect(originX - 3, pos.py, 6, 1);
+                    ctx.fillText(y, originX - 18, pos.py + 4);
+                }
+            }
+
+            const keys = ['E', 'F', 'G', 'H'];
+            
+            // Garis Poligon
+            ctx.beginPath();
+            keys.forEach((k, idx) => {
+                let p = toPixel(points[k].x, points[k].y);
+                if (idx === 0) ctx.moveTo(p.px, p.py);
+                else ctx.lineTo(p.px, p.py);
+            });
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.12)';
+            ctx.fill();
+            ctx.strokeStyle = '#818cf8';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Titik & Label Koordinat
+            keys.forEach(k => {
+                let pt = points[k];
+                let p = toPixel(pt.x, pt.y);
+
+                ctx.beginPath();
+                ctx.arc(p.px, p.py, 7, 0, 2 * Math.PI);
+                ctx.fillStyle = pt.color;
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 12px Inter';
+                ctx.fillText(`${pt.label} (${pt.x}, ${pt.y})`, p.px + 12, p.py - 10);
+            });
+        }
+
+        function setupCanvasListeners() {
+            const getEventPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            };
+
+            const onStart = (e) => {
+                const pos = getEventPos(e);
+                const keys = ['E', 'F', 'G', 'H'];
+                for (let k of keys) {
+                    let pt = toPixel(points[k].x, points[k].y);
+                    let dist = Math.hypot(pos.x - pt.px, pos.y - pt.py);
+                    if (dist < 22) {
+                        draggingPoint = k;
+                        break;
+                    }
+                }
+            };
+
+            const onMove = (e) => {
+                if (!draggingPoint) return;
+                const pos = getEventPos(e);
+                const cart = toCartesian(pos.x, pos.y);
+                
+                points[draggingPoint].x = cart.x;
+                points[draggingPoint].y = cart.y;
+
+                syncStateToInputs();
+                drawCanvas();
+            };
+
+            const onEnd = () => {
+                draggingPoint = null;
+            };
+
+            canvas.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+
+            canvas.addEventListener('touchstart', onStart, { passive: true });
+            window.addEventListener('touchmove', onMove, { passive: true });
+            window.addEventListener('touchend', onEnd);
+        }
+
+        function syncStateToInputs() {
+            document.getElementById('in-ex').value = points.E.x;
+            document.getElementById('in-ey').value = points.E.y;
+            document.getElementById('in-fx').value = points.F.x;
+            document.getElementById('in-fy').value = points.F.y;
+            document.getElementById('in-gx').value = points.G.x;
+            document.getElementById('in-gy').value = points.G.y;
+            document.getElementById('in-hx').value = points.H.x;
+            document.getElementById('in-hy').value = points.H.y;
+
+            document.getElementById('canvas-status-badge').innerText = 
+                `E(${points.E.x},${points.E.y}) | F(${points.F.x},${points.F.y}) | G(${points.G.x},${points.G.y}) | H(${points.H.x},${points.H.y})`;
+        }
+
+        function syncInputsToCanvas() {
+            points.E.x = parseFloat(document.getElementById('in-ex').value) || 0;
+            points.E.y = parseFloat(document.getElementById('in-ey').value) || 0;
+            points.F.x = parseFloat(document.getElementById('in-fx').value) || 0;
+            points.F.y = parseFloat(document.getElementById('in-fy').value) || 0;
+            points.G.x = parseFloat(document.getElementById('in-gx').value) || 0;
+            points.G.y = parseFloat(document.getElementById('in-gy').value) || 0;
+            points.H.x = parseFloat(document.getElementById('in-hx').value) || 0;
+            points.H.y = parseFloat(document.getElementById('in-hy').value) || 0;
+
+            document.getElementById('canvas-status-badge').innerText = 
+                `E(${points.E.x},${points.E.y}) | F(${points.F.x},${points.F.y}) | G(${points.G.x},${points.G.y}) | H(${points.H.x},${points.H.y})`;
+
+            drawCanvas();
+        }
+
+        // Fungsi yang dipanggil saat menekan tombol "Hitung Hasil"
+        function hitungHasil() {
+            drawCanvas();
+
+            const pts = [points.E, points.F, points.G, points.H];
+            let keliling = 0;
+            let stepPerimHtml = '';
+
+            for (let i = 0; i < pts.length; i++) {
+                let p1 = pts[i];
+                let p2 = pts[(i + 1) % pts.length];
+                let dx = p2.x - p1.x;
+                let dy = p2.y - p1.y;
+                let dist = Math.hypot(dx, dy);
+                keliling += dist;
+
+                stepPerimHtml += `<div>Jarak ${p1.label}-${p2.label} = √(${p2.x} - (${p1.x}))² + (${p2.y} - (${p1.y}))² = <span class="text-indigo-300 font-semibold">${dist.toFixed(2)}</span></div>`;
+            }
+            document.getElementById('steps-perimeter').innerHTML = stepPerimHtml;
+
+            // Shoelace Formula
+            let sum1 = 0;
+            let sum2 = 0;
+            let stepShoelaceHtml = '';
+
+            for (let i = 0; i < pts.length; i++) {
+                let p1 = pts[i];
+                let p2 = pts[(i + 1) % pts.length];
+                sum1 += p1.x * p2.y;
+                sum2 += p1.y * p2.x;
+                stepShoelaceHtml += `<div>(${p1.x} × ${p2.y}) - (${p1.y} × ${p2.x}) = ${p1.x * p2.y} - ${p2.x * p1.y} = ${(p1.x * p2.y) - (p1.y * p2.x)}</div>`;
+            }
+
+            let luas = 0.5 * Math.abs(sum1 - sum2);
+            stepShoelaceHtml += `<div class="mt-2 pt-1.5 border-t border-slate-800 text-purple-300 font-semibold">Σ(x<sub>i</sub>y<sub>i+1</sub>) = ${sum1} | Σ(y<sub>i</sub>x<sub>i+1</sub>) = ${sum2}</div>`;
+            stepShoelaceHtml += `<div class="text-purple-300 font-semibold">Luas = 0.5 × |${sum1} - (${sum2})| = <span class="text-white">${luas.toFixed(2)}</span></div>`;
+
+            document.getElementById('steps-shoelace').innerHTML = stepShoelaceHtml;
+            document.getElementById('res-luas').innerText = luas.toFixed(2);
+            document.getElementById('res-keliling').innerText = keliling.toFixed(2);
+
+            // Sembunyikan placeholder, tampilkan kotak hasil langkah
+            document.getElementById('placeholder-info').classList.add('hidden');
+            document.getElementById('result-details-container').classList.remove('hidden');
+
+            const warningBox = document.getElementById('warning-box');
+            if (luas === 0) {
+                warningBox.classList.remove('hidden');
+                document.getElementById('warning-text').innerText = "Peringatan: Luas poligon bernilai 0 (titik segaris atau bertumpuk).";
+            } else {
+                warningBox.classList.add('hidden');
+            }
+        }
+
+        function setContohDefault() {
+            points.E = { x: -3, y: 3, color: '#3b82f6', label: 'E' };
+            points.F = { x: 3, y: 3, color: '#10b981', label: 'F' };
+            points.G = { x: 4, y: -2, color: '#f59e0b', label: 'G' };
+            points.H = { x: -4, y: -2, color: '#f43f5e', label: 'H' };
+            syncStateToInputs();
+            drawCanvas();
+            hitungHasil();
+        }
+
+        function resetKanvas() {
+            points.E = { x: 0, y: 0, color: '#3b82f6', label: 'E' };
+            points.F = { x: 0, y: 0, color: '#10b981', label: 'F' };
+            points.G = { x: 0, y: 0, color: '#f59e0b', label: 'G' };
+            points.H = { x: 0, y: 0, color: '#f43f5e', label: 'H' };
+            syncStateToInputs();
+            drawCanvas();
+            hitungHasil();
+        }
+
+        function toggleGeoGebraModal(show) {
+            const modal = document.getElementById('geogebra-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
